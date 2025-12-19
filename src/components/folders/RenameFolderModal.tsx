@@ -1,0 +1,139 @@
+"use client";
+
+import { useState, useEffect, useRef } from 'react';
+
+interface RenameFolderModalProps {
+  isOpen: boolean;
+  currentName: string;
+  onClose: () => void;
+  onRename: (newName: string) => Promise<void>;
+}
+
+export function RenameFolderModal({
+  isOpen,
+  currentName,
+  onClose,
+  onRename
+}: RenameFolderModalProps) {
+  const [name, setName] = useState(currentName);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(currentName);
+      setError(null);
+      setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }, 100);
+    }
+  }, [isOpen, currentName]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError('Folder name is required');
+      return;
+    }
+
+    if (trimmedName === currentName) {
+      onClose();
+      return;
+    }
+
+    if (trimmedName.includes('/') || trimmedName.includes('\\')) {
+      setError('Folder name cannot contain slashes');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await onRename(trimmedName);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to rename folder');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50" 
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      
+      {/* Modal */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rename-folder-title"
+        className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+      >
+        <h2 id="rename-folder-title" className="text-lg font-semibold text-gray-900">
+          Rename Folder
+        </h2>
+
+        <form onSubmit={handleSubmit} className="mt-4">
+          <div>
+            <label htmlFor="new-folder-name" className="block text-sm font-medium text-gray-700">
+              New Name
+            </label>
+            <input
+              ref={inputRef}
+              id="new-folder-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter new folder name"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              disabled={isSubmitting}
+            />
+            {error && (
+              <p className="mt-1 text-sm text-red-600">{error}</p>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || !name.trim()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Renaming...' : 'Rename'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
