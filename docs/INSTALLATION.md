@@ -295,5 +295,4 @@ npm run dev -- -p 3001
 ### Getting Help
 
 - Check [GitHub Issues](https://github.com/yourusername/setutor/issues)
-- Join our [Discord](https://discord.gg/setutor)
-- Email: support@setutor.com
+- Email: me@gabrielseto.dev

@@ -458,8 +458,7 @@ If you can't resolve your issue:
    - Error messages
    - Steps to reproduce
    - Environment details
-3. **Join our Discord:** [discord.gg/setutor](https://discord.gg/setutor)
-4. **Email support:** support@setutor.com
+3. **Email:** me@gabrielseto.dev
 
 ### Useful Debug Information
 
