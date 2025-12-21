@@ -1,6 +1,17 @@
 "use client";
 
 import { useState } from 'react';
+import { NeonButton } from "@/components/ui/NeonButton";
+import { cn } from "@/lib/utils";
+import {
+  Calendar,
+  Clock,
+  Zap,
+  Target,
+  BookOpen,
+  TrendingUp,
+  BarChart3
+} from "lucide-react";
 
 export type StudyDuration = '1-week' | '2-weeks' | '1-month' | 'custom';
 export type StudyIntensity = 'light' | 'moderate' | 'intensive';
@@ -65,252 +76,196 @@ export function LearningPlanConfigForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       {/* Study Duration Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="mb-3 block text-sm font-bold text-gray-900">
           Study Duration
         </label>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {([
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
             { value: '1-week', label: '1 Week', days: 7 },
             { value: '2-weeks', label: '2 Weeks', days: 14 },
             { value: '1-month', label: '1 Month', days: 30 },
             { value: 'custom', label: 'Custom', days: null },
-          ] as const).map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setDuration(option.value)}
-              disabled={isGenerating}
-              className={`rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all ${
-                duration === option.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-              } ${isGenerating ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <span>{option.label}</span>
-                {option.days && (
-                  <span className="text-xs text-gray-400">{option.days} days</span>
+          ].map((option) => {
+            const isSelected = duration === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setDuration(option.value as StudyDuration)}
+                disabled={isGenerating}
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-1 rounded-xl border-2 p-3 transition-all",
+                  isSelected
+                    ? "border-black bg-black text-brand-neon shadow-lg"
+                    : "border-gray-100 bg-white text-gray-500 hover:border-gray-200 hover:bg-gray-50 bg-white"
                 )}
-              </div>
-            </button>
-          ))}
+              >
+                <span className="font-bold text-sm">{option.label}</span>
+                {option.days && (
+                  <span className={cn("text-xs", isSelected ? "text-gray-400" : "text-gray-400")}>{option.days} days</span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Custom Duration Slider */}
         {duration === 'custom' && (
-          <div className="mt-3">
-            <div className="flex items-center gap-4">
-              <input
-                type="range"
-                id="customDays"
-                min={3}
-                max={90}
-                step={1}
-                value={customDays}
-                onChange={(e) => setCustomDays(Number(e.target.value))}
-                className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-                disabled={isGenerating}
-              />
-              <span className="w-20 text-center text-sm font-semibold text-gray-900">
-                {customDays} days
-              </span>
+          <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Custom Days</span>
+              <span className="font-mono font-bold">{customDays} days</span>
             </div>
-            <div className="mt-1 flex justify-between text-xs text-gray-500">
-              <span>3 days</span>
-              <span>90 days</span>
-            </div>
+            <input
+              type="range"
+              min={3}
+              max={90}
+              step={1}
+              value={customDays}
+              onChange={(e) => setCustomDays(Number(e.target.value))}
+              className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-black focus:outline-none"
+              disabled={isGenerating}
+            />
           </div>
         )}
       </div>
 
-      {/* Study Intensity Radio Buttons */}
+      {/* Study Intensity */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="mb-3 block text-sm font-bold text-gray-900">
           Study Intensity
         </label>
-        <div className="mt-3 space-y-3">
-          {([
-            { 
-              value: 'light', 
-              label: 'Light', 
-              description: 'Relaxed pace with more review time',
-              icon: (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              ),
-              color: 'green'
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              value: 'light',
+              label: 'Light',
+              desc: 'Relaxed pace',
+              icon: BookOpen,
             },
-            { 
-              value: 'moderate', 
-              label: 'Moderate', 
-              description: 'Balanced learning with steady progress',
-              icon: (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ),
-              color: 'yellow'
+            {
+              value: 'moderate',
+              label: 'Moderate',
+              desc: 'Steady progress',
+              icon: TrendingUp,
             },
-            { 
-              value: 'intensive', 
-              label: 'Intensive', 
-              description: 'Fast-paced with comprehensive coverage',
-              icon: (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              ),
-              color: 'red'
+            {
+              value: 'intensive',
+              label: 'Intensive',
+              desc: 'Fast-paced',
+              icon: Zap,
             },
-          ] as const).map((option) => (
-            <label
-              key={option.value}
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-4 transition-all ${
-                intensity === option.value
-                  ? option.color === 'green'
-                    ? 'border-green-500 bg-green-50'
-                    : option.color === 'yellow'
-                    ? 'border-yellow-500 bg-yellow-50'
-                    : 'border-red-500 bg-red-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              } ${isGenerating ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <input
-                type="radio"
-                name="intensity"
-                value={option.value}
-                checked={intensity === option.value}
-                onChange={() => setIntensity(option.value)}
-                disabled={isGenerating}
-                className="mt-1 h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <div className="flex items-start gap-3">
-                <div className={`${
-                  option.color === 'green' ? 'text-green-600' :
-                  option.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
-                }`}>
-                  {option.icon}
-                </div>
-                <div>
-                  <span className="block font-medium text-gray-900">{option.label}</span>
-                  <span className="block text-sm text-gray-500">{option.description}</span>
+          ].map((option) => {
+            const isSelected = intensity === option.value;
+            const Icon = option.icon;
+            return (
+              <div
+                key={option.value}
+                onClick={() => !isGenerating && setIntensity(option.value as StudyIntensity)}
+                className={cn(
+                  "cursor-pointer rounded-xl border-2 p-4 transition-all duration-200",
+                  isSelected
+                    ? "border-brand-neon bg-white shadow-neon-glow ring-1 ring-brand-neon"
+                    : "border-gray-100 bg-white hover:border-gray-200"
+                )}
+              >
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className={cn(
+                    "rounded-full p-2 transition-colors",
+                    isSelected ? "bg-brand-neon text-black" : "bg-gray-100 text-gray-400"
+                  )}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className={cn("block font-bold text-sm", isSelected ? "text-black" : "text-gray-900")}>
+                      {option.label}
+                    </span>
+                    <span className="text-xs text-gray-500">{option.desc}</span>
+                  </div>
                 </div>
               </div>
-            </label>
-          ))}
+            );
+          })}
         </div>
-      </div>
-
-      {/* Learning Goals Text Area */}
-      <div>
-        <label htmlFor="learningGoals" className="block text-sm font-medium text-gray-700">
-          Learning Goals <span className="text-gray-400">(optional)</span>
-        </label>
-        <div className="mt-2">
-          <textarea
-            id="learningGoals"
-            value={learningGoals}
-            onChange={(e) => setLearningGoals(e.target.value)}
-            placeholder="e.g., Master the fundamentals of machine learning, Prepare for certification exam, Understand key concepts for project..."
-            disabled={isGenerating}
-            rows={3}
-            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-50"
-          />
-        </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Describe what you want to achieve with this learning plan
-        </p>
       </div>
 
       {/* Study Time Per Day Slider */}
-      <div>
-        <label htmlFor="hoursPerDay" className="block text-sm font-medium text-gray-700">
-          Study Time Per Day
-        </label>
-        <div className="mt-2">
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              id="hoursPerDay"
-              min={0.5}
-              max={8}
-              step={0.5}
-              value={hoursPerDay}
-              onChange={(e) => setHoursPerDay(Number(e.target.value))}
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-              disabled={isGenerating}
-            />
-            <span className="w-20 text-center text-sm font-semibold text-gray-900">
-              {hoursPerDay} hr{hoursPerDay !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="mt-1 flex justify-between text-xs text-gray-500">
-            <span>0.5 hr</span>
-            <span>8 hrs</span>
-          </div>
+      <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <label className="flex items-center gap-2 text-sm font-bold text-gray-900">
+            <Clock className="h-4 w-4 text-brand-neon fill-black" />
+            Study Time / Day
+          </label>
+          <span className="flex h-8 w-20 items-center justify-center rounded-lg bg-black font-mono font-bold text-brand-neon text-xs">
+            {hoursPerDay} hours
+          </span>
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Total study time: approximately {getTotalHours()} hours over {getDurationDays()} days
+        <input
+          type="range"
+          min={0.5}
+          max={8}
+          step={0.5}
+          value={hoursPerDay}
+          onChange={(e) => setHoursPerDay(Number(e.target.value))}
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-black focus:outline-none"
+          disabled={isGenerating}
+        />
+        <p className="mt-4 text-xs font-medium text-gray-500 flex items-center gap-1">
+          <BarChart3 className="h-3 w-3" />
+          Total: ~{getTotalHours()} hours over {getDurationDays()} days
         </p>
       </div>
 
-      {/* Start Date Picker */}
-      <div>
-        <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-          Start Date
-        </label>
-        <div className="mt-2">
-          <input
-            type="date"
-            id="startDate"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            disabled={isGenerating}
-            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-50"
-          />
+      <div className="grid gap-6 sm:grid-cols-2">
+        {/* Start Date */}
+        <div>
+          <label className="mb-2 block text-sm font-bold text-gray-900">
+            Start Date
+          </label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              disabled={isGenerating}
+              className="block w-full rounded-xl border-2 border-gray-100 bg-gray-50 py-2.5 pl-10 pr-4 text-sm font-medium text-gray-900 focus:border-black focus:bg-white focus:outline-none transition-all cursor-pointer"
+            />
+          </div>
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          When do you want to start your learning plan?
-        </p>
+
+        {/* Learning Goals */}
+        <div>
+          <label className="mb-2 block text-sm font-bold text-gray-900">
+            Goals <span className="text-gray-400 font-normal">(Optional)</span>
+          </label>
+          <div className="relative">
+            <Target className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={learningGoals}
+              onChange={(e) => setLearningGoals(e.target.value)}
+              placeholder="e.g. Master Machine Learning"
+              disabled={isGenerating}
+              className="block w-full rounded-xl border-2 border-gray-100 bg-gray-50 py-2.5 pl-10 pr-4 text-sm font-medium text-gray-900 placeholder-gray-400 focus:border-black focus:bg-white focus:outline-none transition-all"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Generate Button */}
       <div className="pt-2">
-        <button
+        <NeonButton
           type="submit"
+          fullWidth
           disabled={!canGenerate}
-          className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${
-            canGenerate
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md hover:from-blue-700 hover:to-purple-700 hover:shadow-lg'
-              : 'cursor-not-allowed bg-gray-200 text-gray-400'
-          }`}
+          isLoading={isGenerating}
         >
-          {isGenerating ? (
-            <>
-              <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Generating...</span>
-            </>
-          ) : (
-            <>
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>Generate Learning Plan</span>
-            </>
-          )}
-        </button>
-        {selectedDocumentCount === 0 && (
-          <p className="mt-2 text-center text-xs text-amber-600">
-            Please select at least one document to generate a learning plan
-          </p>
-        )}
+          {isGenerating ? "Creating Plan..." : "Generate Learning Plan"}
+        </NeonButton>
       </div>
     </form>
   );

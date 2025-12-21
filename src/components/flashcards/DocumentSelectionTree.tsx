@@ -3,6 +3,19 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Folder } from '@/lib/hooks/useFolders';
 import { Document } from '@/lib/db/types';
+import {
+  ChevronRight,
+  Folder as FolderIcon,
+  FolderOpen,
+  FileText,
+  CheckSquare,
+  Square,
+  Maximize2,
+  Minimize2,
+  X,
+  UploadCloud
+} from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 interface FolderWithDocuments extends Folder {
   documents: Document[];
@@ -32,9 +45,8 @@ function DocumentSelectionTreeNode({
   const children = allFolders.filter(f => f.parent_id === folder.id);
   const hasChildren = children.length > 0 || folder.documents.length > 0;
   const isExpanded = expandedIds.has(folder.id);
-  
-  // Check if all documents in this folder are selected
-  const allDocsSelected = folder.documents.length > 0 && 
+
+  const allDocsSelected = folder.documents.length > 0 &&
     folder.documents.every(doc => selectedDocumentIds.has(doc.id));
   const someDocsSelected = folder.documents.some(doc => selectedDocumentIds.has(doc.id));
 
@@ -50,83 +62,60 @@ function DocumentSelectionTreeNode({
   return (
     <div className="select-none">
       <div
-        className="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-gray-100"
+        className={cn(
+          "flex items-center gap-2 rounded-lg px-2 py-2 transition-all duration-200",
+          "hover:bg-gray-50 group"
+        )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
       >
-        {/* Expand/Collapse Button */}
         <button
           onClick={handleExpandClick}
-          className={`flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-gray-200 ${
-            !hasChildren ? 'invisible' : ''
-          }`}
-          aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
+          className={cn(
+            "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
+            "hover:bg-gray-200 text-gray-400 hover:text-gray-600",
+            !hasChildren && "invisible"
+          )}
         >
-          <svg
-            className={`h-4 w-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <ChevronRight className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-90")} />
         </button>
 
-        {/* Folder Checkbox - selects all documents in folder */}
-        {folder.documents.length > 0 && (
-          <input
-            type="checkbox"
-            checked={allDocsSelected}
-            ref={(el) => {
-              if (el) el.indeterminate = someDocsSelected && !allDocsSelected;
-            }}
-            onChange={handleFolderCheckboxChange}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            aria-label={`Select all documents in ${folder.name}`}
-          />
-        )}
-        {folder.documents.length === 0 && (
-          <div className="h-4 w-4" /> 
+        {/* Custom Checkbox */}
+        {folder.documents.length > 0 ? (
+          <div
+            onClick={handleFolderCheckboxChange}
+            className={cn(
+              "flex h-5 w-5 cursor-pointer items-center justify-center rounded border transition-colors",
+              allDocsSelected
+                ? "border-black bg-black text-brand-neon"
+                : someDocsSelected
+                  ? "border-black bg-black text-brand-neon"
+                  : "border-gray-300 bg-white hover:border-gray-400"
+            )}
+          >
+            {allDocsSelected && <CheckSquare className="h-3.5 w-3.5" />}
+            {someDocsSelected && !allDocsSelected && <div className="h-2 w-2 bg-brand-neon rounded-sm" />}
+          </div>
+        ) : (
+          <div className="h-5 w-5" />
         )}
 
-        {/* Folder Icon */}
-        <svg
-          className={`h-5 w-5 flex-shrink-0 ${isExpanded ? 'text-blue-500' : 'text-gray-400'}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          {isExpanded ? (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
-            />
-          ) : (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-            />
-          )}
-        </svg>
+        <div className="flex items-center gap-2 text-gray-600">
+          {isExpanded
+            ? <FolderOpen className="h-5 w-5 text-gray-900" />
+            : <FolderIcon className="h-5 w-5" />
+          }
+          <span className="truncate text-sm font-medium">{folder.name}</span>
+        </div>
 
-        {/* Folder Name */}
-        <span className="truncate text-sm text-gray-700">{folder.name}</span>
-        
-        {/* Document count badge */}
         {folder.documents.length > 0 && (
-          <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-            {folder.documents.length} doc{folder.documents.length !== 1 ? 's' : ''}
+          <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">
+            {folder.documents.length}
           </span>
         )}
       </div>
 
-      {/* Documents and Children */}
       {hasChildren && isExpanded && (
         <div>
-          {/* Documents in this folder */}
           {folder.documents.map(doc => (
             <DocumentItem
               key={doc.id}
@@ -136,8 +125,7 @@ function DocumentSelectionTreeNode({
               onToggle={() => onToggleDocument(doc.id)}
             />
           ))}
-          
-          {/* Child folders */}
+
           {children.map(child => (
             <DocumentSelectionTreeNode
               key={child.id}
@@ -157,7 +145,6 @@ function DocumentSelectionTreeNode({
   );
 }
 
-
 interface DocumentItemProps {
   document: Document;
   level: number;
@@ -168,43 +155,39 @@ interface DocumentItemProps {
 function DocumentItem({ document, level, isSelected, onToggle }: DocumentItemProps) {
   return (
     <div
-      className={`flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-gray-100 ${
-        isSelected ? 'bg-blue-50' : ''
-      }`}
+      className={cn(
+        "flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-all duration-200 border border-transparent",
+        isSelected
+          ? "bg-brand-neon/5 border-brand-neon/20 shadow-sm"
+          : "hover:bg-gray-50"
+      )}
       style={{ paddingLeft: `${(level + 1) * 16 + 8}px` }}
+      onClick={onToggle}
     >
-      {/* Spacer for alignment */}
-      <div className="h-5 w-5" />
-      
-      {/* Checkbox */}
-      <input
-        type="checkbox"
-        checked={isSelected}
-        onChange={onToggle}
-        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        aria-label={`Select ${document.name}`}
-      />
+      <div className="h-5 w-6" /> {/* Spacer alignment */}
 
-      {/* Document Icon */}
-      <svg
-        className="h-5 w-5 flex-shrink-0 text-red-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        />
-      </svg>
+      <div className={cn(
+        "flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors",
+        isSelected
+          ? "border-black bg-black text-brand-neon"
+          : "border-gray-300 bg-white group-hover:border-gray-400"
+      )}>
+        {isSelected && <CheckSquare className="h-3.5 w-3.5" />}
+      </div>
 
-      {/* Document Name */}
-      <span className="truncate text-sm text-gray-700">{document.name}</span>
-      
-      {/* File size */}
-      <span className="ml-auto text-xs text-gray-400">
+      <FileText className={cn(
+        "h-4 w-4 shrink-0",
+        isSelected ? "text-black" : "text-gray-400"
+      )} />
+
+      <span className={cn(
+        "truncate text-sm",
+        isSelected ? "font-medium text-black" : "text-gray-600"
+      )}>
+        {document.name}
+      </span>
+
+      <span className="ml-auto text-[10px] text-gray-400 font-mono">
         {formatFileSize(document.file_size)}
       </span>
     </div>
@@ -242,18 +225,17 @@ export function DocumentSelectionTree({
     documents: documents.filter(doc => doc.folder_id === folder.id),
   }));
 
-  // Documents without a folder (root level)
+  // Documents without a folder
   const rootDocuments = documents.filter(doc => doc.folder_id === null);
   const rootFolders = foldersWithDocuments.filter(f => f.parent_id === null);
 
-  // Auto-expand folders that have selected documents
+  // Auto-expand
   useEffect(() => {
     const foldersToExpand = new Set<string>();
     selectedDocumentIds.forEach(docId => {
       const doc = documents.find(d => d.id === docId);
       if (doc?.folder_id) {
         foldersToExpand.add(doc.folder_id);
-        // Also expand parent folders
         let parentId = folders.find(f => f.id === doc.folder_id)?.parent_id;
         while (parentId) {
           foldersToExpand.add(parentId);
@@ -269,61 +251,34 @@ export function DocumentSelectionTree({
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }, []);
 
   const handleToggleDocument = useCallback((docId: string) => {
     const newSelectedIds = new Set(selectedDocumentIds);
-    if (newSelectedIds.has(docId)) {
-      newSelectedIds.delete(docId);
-    } else {
-      newSelectedIds.add(docId);
-    }
+    if (newSelectedIds.has(docId)) newSelectedIds.delete(docId);
+    else newSelectedIds.add(docId);
     onSelectionChange(newSelectedIds);
   }, [selectedDocumentIds, onSelectionChange]);
 
   const handleToggleFolderDocuments = useCallback((folderId: string, select: boolean) => {
     const folder = foldersWithDocuments.find(f => f.id === folderId);
     if (!folder) return;
-    
     const newSelectedIds = new Set(selectedDocumentIds);
     folder.documents.forEach(doc => {
-      if (select) {
-        newSelectedIds.add(doc.id);
-      } else {
-        newSelectedIds.delete(doc.id);
-      }
+      if (select) newSelectedIds.add(doc.id);
+      else newSelectedIds.delete(doc.id);
     });
     onSelectionChange(newSelectedIds);
   }, [foldersWithDocuments, selectedDocumentIds, onSelectionChange]);
 
-  // Expand all folders
-  const expandAll = useCallback(() => {
-    setExpandedIds(new Set(folders.map(f => f.id)));
-  }, [folders]);
-
-  // Collapse all folders
-  const collapseAll = useCallback(() => {
-    setExpandedIds(new Set());
-  }, []);
-
-  // Select all documents
-  const selectAll = useCallback(() => {
-    onSelectionChange(new Set(documents.map(d => d.id)));
-  }, [documents, onSelectionChange]);
-
-  // Deselect all documents
-  const deselectAll = useCallback(() => {
-    onSelectionChange(new Set());
-  }, [onSelectionChange]);
-
-  // Clear selection (alias for deselect all)
+  const expandAll = useCallback(() => setExpandedIds(new Set(folders.map(f => f.id))), [folders]);
+  const collapseAll = useCallback(() => setExpandedIds(new Set()), []);
+  const selectAll = useCallback(() => onSelectionChange(new Set(documents.map(d => d.id))), [documents, onSelectionChange]);
+  const deselectAll = useCallback(() => onSelectionChange(new Set()), [onSelectionChange]);
   const clearSelection = deselectAll;
 
   const totalDocuments = documents.length;
@@ -331,67 +286,55 @@ export function DocumentSelectionTree({
 
   if (totalDocuments === 0) {
     return (
-      <div className={`rounded-lg border-2 border-dashed border-gray-300 p-8 text-center ${className}`}>
-        <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <p className="mt-2 text-sm text-gray-500">No documents available</p>
-        <p className="mt-1 text-xs text-gray-400">Upload some PDF documents to get started</p>
+      <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50/50 p-8 text-center ${className}`}>
+        <div className="mb-3 rounded-full bg-gray-100 p-3">
+          <UploadCloud className="h-6 w-6 text-gray-400" />
+        </div>
+        <p className="text-sm font-medium text-gray-900">No documents yet</p>
+        <p className="mt-1 text-xs text-gray-500">Upload PDFs to start generating quizzes</p>
       </div>
     );
   }
 
   return (
     <div className={className}>
-      {/* Action Buttons */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <button
-          onClick={expandAll}
-          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-        >
-          Expand All
-        </button>
-        <span className="text-gray-300">|</span>
-        <button
-          onClick={collapseAll}
-          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-        >
-          Collapse All
-        </button>
-        <span className="text-gray-300">|</span>
-        <button
-          onClick={selectAll}
-          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-        >
-          Select All
-        </button>
-        <span className="text-gray-300">|</span>
-        <button
-          onClick={deselectAll}
-          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-        >
-          Deselect All
-        </button>
-      </div>
-
-      {/* Selection Count */}
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm text-gray-600">
-          {selectedCount} of {totalDocuments} document{totalDocuments !== 1 ? 's' : ''} selected
-        </span>
-        {selectedCount > 0 && (
+      {/* Selection Header */}
+      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex bg-gray-100/50 p-1 rounded-lg gap-1">
           <button
-            onClick={clearSelection}
-            className="text-xs text-red-600 hover:text-red-800 hover:underline"
+            onClick={expandAll}
+            className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-gray-500 hover:text-black"
+            title="Expand All"
           >
-            Clear Selection
+            <Maximize2 className="h-4 w-4" />
           </button>
-        )}
+          <button
+            onClick={collapseAll}
+            className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-gray-500 hover:text-black"
+            title="Collapse All"
+          >
+            <Minimize2 className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-md text-gray-600">
+            {selectedCount} selected
+          </div>
+          {selectedCount > 0 && (
+            <button
+              onClick={clearSelection}
+              className="flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md transition-colors"
+            >
+              <X className="h-3 w-3" />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Tree */}
-      <div className="max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-white">
-        {/* Root level documents */}
+      {/* Tree View */}
+      <div className="max-h-[400px] overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-sm space-y-1">
         {rootDocuments.map(doc => (
           <DocumentItem
             key={doc.id}
@@ -401,8 +344,6 @@ export function DocumentSelectionTree({
             onToggle={() => handleToggleDocument(doc.id)}
           />
         ))}
-        
-        {/* Folders */}
         {rootFolders.map(folder => (
           <DocumentSelectionTreeNode
             key={folder.id}
@@ -416,6 +357,15 @@ export function DocumentSelectionTree({
             onToggleFolderDocuments={handleToggleFolderDocuments}
           />
         ))}
+      </div>
+
+      <div className="text-right mt-2">
+        <button
+          onClick={selectAll}
+          className="text-xs font-medium text-gray-400 hover:text-brand-neon hover:underline decoration-brand-neon underline-offset-4 transition-all"
+        >
+          Select All Documents
+        </button>
       </div>
     </div>
   );

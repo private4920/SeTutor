@@ -1,61 +1,44 @@
-"use client";
-
-import { memo } from 'react';
+import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: React.ReactNode;
-  iconBgColor: string;
-  iconColor: string;
   loading?: boolean;
+  className?: string; // Allow custom classes
+  // Deprecated props (kept for compatibility but ignored in new design)
+  iconBgColor?: string;
+  iconColor?: string;
 }
 
-/**
- * Memoized stat card component
- * Requirements: 1.3, 6.4, 12.1, 12.3 - Responsive design and performance optimization
- * Accessibility: ARIA labels and semantic structure
- */
-export const StatCard = memo(function StatCard({
-  title,
-  value,
-  icon,
-  iconBgColor,
-  iconColor,
-  loading = false,
-}: StatCardProps) {
+export function StatCard({ title, value, icon, loading, className }: StatCardProps) {
   return (
-    <article 
-      className="rounded-lg bg-white p-4 sm:p-6 shadow-sm"
-      aria-label={`${title}: ${loading ? 'Loading' : value}`}
-    >
-      <div className="flex items-center gap-3 sm:gap-4">
-        <div
-          className={`flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-lg ${iconBgColor}`}
-          aria-hidden="true"
-        >
-          <span className={`${iconColor} [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6`}>{icon}</span>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs sm:text-sm text-gray-600 truncate" id={`stat-${title.replace(/\s+/g, '-').toLowerCase()}`}>{title}</p>
+    <div className={cn(
+      "group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-gray-300",
+      className
+    )}>
+      {/* Decorative gradient blob */}
+      <div className="absolute -right-4 -top-4 size-20 rounded-full bg-gray-50 blur-2xl transition-all group-hover:bg-brand-neon/20" />
+
+      <div className="relative z-10 flex items-start justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-500">{title}</p>
           {loading ? (
-            <div 
-              className="h-7 sm:h-8 w-10 sm:w-12 animate-pulse rounded bg-gray-200" 
-              role="status"
-              aria-label="Loading value"
-            >
-              <span className="sr-only">Loading...</span>
-            </div>
+            <div className="mt-2 h-8 w-16 animate-pulse rounded bg-gray-100" />
           ) : (
-            <p 
-              className="text-xl sm:text-2xl font-semibold text-gray-900"
-              aria-labelledby={`stat-${title.replace(/\s+/g, '-').toLowerCase()}`}
-            >
-              {value}
-            </p>
+            <h3 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">{value}</h3>
           )}
         </div>
+        <div className="flex size-10 items-center justify-center rounded-xl bg-gray-50 text-gray-600 ring-1 ring-black/5 group-hover:bg-black group-hover:text-brand-neon transition-colors">
+          {icon}
+        </div>
       </div>
-    </article>
+
+      {/* Optional Trend indicator (mock) */}
+      <div className="mt-4 flex items-center gap-1 text-xs font-medium text-green-600">
+        <span className="flex size-4 items-center justify-center rounded-full bg-green-100">+</span>
+        <span>Active</span>
+      </div>
+    </div>
   );
-});
+}

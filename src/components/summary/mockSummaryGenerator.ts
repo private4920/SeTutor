@@ -13,7 +13,7 @@ export interface GeneratedSummary {
 }
 
 const MOCK_SUMMARIES: Record<SummaryLength, { content: string; keyTakeaways: string[] }> = {
-  brief: {
+  short: {
     content: `This document provides a comprehensive overview of the subject matter, highlighting the fundamental principles and their practical applications in modern contexts. The key findings demonstrate significant advancements in the field, with particular emphasis on innovative methodologies that have emerged in recent years.
 
 The research establishes a clear framework for understanding complex concepts, making them accessible to both beginners and advanced practitioners. Notable conclusions include the importance of systematic approaches and the value of interdisciplinary collaboration in achieving meaningful results.
@@ -26,7 +26,7 @@ The practical implications extend across multiple domains, offering actionable i
       'Practical implementation guidelines support real-world application',
     ],
   },
-  standard: {
+  medium: {
     content: `**Introduction and Context**
 
 This comprehensive document explores the multifaceted aspects of the subject matter, providing readers with a thorough understanding of both theoretical foundations and practical implementations. The analysis begins with an examination of core principles that have shaped the field over decades of research and development, establishing a solid groundwork for the discussions that follow.
@@ -54,7 +54,7 @@ The document concludes with recommendations for implementation and suggestions f
       'Practical implementation guidelines support real-world application',
     ],
   },
-  detailed: {
+  long: {
     content: `This extensive document presents a thorough examination of the subject matter, encompassing historical context, theoretical frameworks, methodological approaches, empirical findings, and future directions. The analysis draws upon a rich body of literature and primary research to construct a comprehensive understanding of the field.
 
 **Historical Context and Evolution**
@@ -111,7 +111,7 @@ export function generateMockSummary(
 ): GeneratedSummary {
   const mockData = MOCK_SUMMARIES[config.length];
   const wordCount = calculateWordCount(mockData.content);
-  
+
   return {
     id: generateId(),
     title: 'Document Summary',
@@ -133,13 +133,13 @@ export async function generateMockSummaryAsync(
   // Simulate generation time based on length
   const totalSteps = config.length === 'brief' ? 3 : config.length === 'standard' ? 5 : 7;
   const stepDuration = 500; // ms per step
-  
+
   for (let step = 1; step <= totalSteps; step++) {
     await new Promise(resolve => setTimeout(resolve, stepDuration));
     if (onProgress) {
       onProgress((step / totalSteps) * 100);
     }
   }
-  
+
   return generateMockSummary(config, sourceDocumentIds);
 }

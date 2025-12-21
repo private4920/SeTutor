@@ -5,17 +5,19 @@ import { ProtectedRoute } from "@/lib/firebase/ProtectedRoute";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { DashboardLayout } from "@/components/dashboard";
 import { DocumentSelectionTree } from "@/components/flashcards";
-import { 
-  QuizConfigForm, 
-  QuizConfig, 
-  QuizTaker, 
+import {
+  QuizConfigForm,
+  QuizConfig,
+  QuizTaker,
   QuizResults,
-  GeneratedQuiz, 
+  GeneratedQuiz,
   QuizResult,
-  generateMockQuizAsync 
+  generateMockQuizAsync
 } from "@/components/quiz";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDocuments } from "@/lib/hooks/useDocuments";
+import { BrainCircuit, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type GeneratorState = 'selection' | 'generating' | 'taking' | 'results';
 
@@ -46,7 +48,7 @@ function QuizGeneratorContent() {
     setCurrentConfig(config);
     setGeneratorState('generating');
     setGenerationProgress(0);
-    
+
     try {
       const quiz = await generateMockQuizAsync(
         config,
@@ -103,9 +105,7 @@ function QuizGeneratorContent() {
           <QuizResults
             quiz={currentQuiz}
             result={quizResult}
-            onRetake={handleRetakeQuiz}
-            onSaveResults={handleSaveResults}
-            onShare={handleShareResults}
+            onRetry={handleRetakeQuiz}
             onBack={handleBackToSelection}
           />
         </div>
@@ -132,77 +132,42 @@ function QuizGeneratorContent() {
   if (generatorState === 'generating' && currentConfig) {
     return (
       <DashboardLayout>
-        <div className="mx-auto max-w-4xl space-y-6">
-          {/* Page Header */}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Generating Quiz</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Please wait while we analyze your documents and create quiz questions.
-            </p>
+        <div className="mx-auto flex h-[80vh] max-w-2xl flex-col items-center justify-center text-center">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 animate-pulse rounded-full bg-brand-neon/20 blur-xl" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-white shadow-xl border border-gray-100">
+              <BrainCircuit className="h-12 w-12 text-black animate-pulse" strokeWidth={1.5} />
+            </div>
           </div>
 
-          {/* Loading State */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="relative">
-                <svg
-                  className="h-16 w-16 animate-spin text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              </div>
-              <p className="mt-4 text-lg font-medium text-gray-900">
-                Generating {currentConfig.questionCount} questions...
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Analyzing {selectedCount} document{selectedCount !== 1 ? 's' : ''}
-              </p>
-              
-              {/* Progress bar */}
-              <div className="mt-4 w-full max-w-xs">
-                <div className="h-2 w-full rounded-full bg-gray-200">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-                    style={{ width: `${generationProgress}%` }}
-                  />
-                </div>
-                <p className="mt-1 text-center text-xs text-gray-500">
-                  {Math.round(generationProgress)}% complete
-                </p>
-              </div>
-              
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {currentConfig.questionTypes.map((type) => (
-                  <span
-                    key={type}
-                    className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
-                  >
-                    {type === 'multiple-choice' && 'Multiple Choice'}
-                    {type === 'true-false' && 'True/False'}
-                    {type === 'short-answer' && 'Short Answer'}
-                  </span>
-                ))}
-              </div>
-              {currentConfig.timeLimit && (
-                <p className="mt-3 text-sm text-gray-500">
-                  Time limit: {currentConfig.timeLimit} minutes
-                </p>
-              )}
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">
+            Generating Quiz...
+          </h2>
+          <p className="mb-8 text-gray-500 max-w-md">
+            Analyzing your documents and creating {currentConfig.questionCount} {currentConfig.difficulty} questions.
+          </p>
+
+          <div className="w-full max-w-xs space-y-2">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <div
+                className="h-full bg-black transition-all duration-500 ease-out"
+                style={{ width: `${generationProgress}%` }}
+              />
             </div>
+            <div className="flex justify-between text-xs font-medium text-gray-400">
+              <span>AI Processing</span>
+              <span>{Math.round(generationProgress)}%</span>
+            </div>
+          </div>
+
+          <div className="mt-8 flex gap-2">
+            {currentConfig.questionTypes.map((type) => (
+              <span key={type} className="px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                {type === 'multiple-choice' && 'Multiple Choice'}
+                {type === 'true-false' && 'True/False'}
+                {type === 'short-answer' && 'Short Answer'}
+              </span>
+            ))}
           </div>
         </div>
       </DashboardLayout>
@@ -212,104 +177,59 @@ function QuizGeneratorContent() {
   // Default: Selection state
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in duration-500">
         {/* Page Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Generate Quiz</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Generate Quiz</h1>
+          <p className="mt-2 text-gray-500">
             Select documents to generate AI-powered quizzes to test your knowledge.
           </p>
         </div>
 
         {/* Source Selection Section */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Select Source Documents</h2>
-            <p className="mt-1 text-sm text-gray-500">
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+            <h2 className="font-semibold text-gray-900">Select Source Documents</h2>
+            <p className="text-sm text-gray-500">
               Choose the PDF documents you want to generate quiz questions from.
             </p>
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center gap-3">
-                <svg
-                  className="h-8 w-8 animate-spin text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <span className="text-sm text-gray-500">Loading documents...</span>
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-brand-neon" />
+                  <span className="text-sm text-gray-500">Loading documents...</span>
+                </div>
               </div>
-            </div>
-          ) : (
-            <DocumentSelectionTree
-              folders={folders}
-              documents={documents}
-              selectedDocumentIds={selectedDocumentIds}
-              onSelectionChange={handleSelectionChange}
-            />
-          )}
-        </div>
-
-        {/* Selection Summary */}
-        {selectedCount > 0 && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                <svg
-                  className="h-5 w-5 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="font-medium text-blue-900">
-                  {selectedCount} document{selectedCount !== 1 ? 's' : ''} selected
-                </p>
-                <p className="text-sm text-blue-700">
-                  Ready to configure quiz generation options.
-                </p>
-              </div>
-            </div>
+            ) : (
+              <DocumentSelectionTree
+                folders={folders}
+                documents={documents}
+                selectedDocumentIds={selectedDocumentIds}
+                onSelectionChange={handleSelectionChange}
+              />
+            )}
           </div>
-        )}
+        </section>
 
         {/* Configuration Section */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Configuration Options</h2>
-            <p className="mt-1 text-sm text-gray-500">
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+            <h2 className="font-semibold text-gray-900">Configuration Options</h2>
+            <p className="text-sm text-gray-500">
               Customize your quiz generation settings.
             </p>
           </div>
-          <QuizConfigForm
-            selectedDocumentCount={selectedCount}
-            onGenerate={handleGenerate}
-            isGenerating={isGenerating}
-          />
-        </div>
+          <div className="p-6">
+            <QuizConfigForm
+              selectedDocumentCount={selectedCount}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
+            />
+          </div>
+        </section>
       </div>
     </DashboardLayout>
   );

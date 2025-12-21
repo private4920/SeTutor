@@ -5,12 +5,13 @@ import { ProtectedRoute } from "@/lib/firebase/ProtectedRoute";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { DashboardLayout } from "@/components/dashboard";
 import { DocumentSelectionTree } from "@/components/flashcards";
-import { 
-  SummaryConfigForm, 
+import {
+  SummaryConfigForm,
   SummaryConfig,
   SummaryDisplay,
   generateMockSummaryAsync,
   GeneratedSummary,
+  SummaryLoading,
 } from "@/components/summary";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDocuments } from "@/lib/hooks/useDocuments";
@@ -43,7 +44,7 @@ function SummaryGeneratorContent() {
     setCurrentConfig(config);
     setGeneratorState('generating');
     setGenerationProgress(0);
-    
+
     try {
       const summary = await generateMockSummaryAsync(
         config,
@@ -74,76 +75,11 @@ function SummaryGeneratorContent() {
   if (generatorState === 'generating' && currentConfig) {
     return (
       <DashboardLayout>
-        <div className="mx-auto max-w-4xl space-y-6">
-          {/* Page Header */}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Generating Summary</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Please wait while we analyze your documents and create a summary.
-            </p>
-          </div>
-
-          {/* Loading State */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="relative">
-                <svg
-                  className="h-16 w-16 animate-spin text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              </div>
-              <p className="mt-4 text-lg font-medium text-gray-900">
-                Generating {currentConfig.length} summary...
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Analyzing {selectedCount} document{selectedCount !== 1 ? 's' : ''}
-              </p>
-              
-              {/* Progress bar */}
-              <div className="mt-4 w-full max-w-xs">
-                <div className="h-2 w-full rounded-full bg-gray-200">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-                    style={{ width: `${generationProgress}%` }}
-                  />
-                </div>
-                <p className="mt-1 text-center text-xs text-gray-500">
-                  {Math.round(generationProgress)}% complete
-                </p>
-              </div>
-              
-              {/* Config summary */}
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 capitalize">
-                  {currentConfig.length} length
-                </span>
-                {currentConfig.focusAreas.map((focus) => (
-                  <span
-                    key={focus}
-                    className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 capitalize"
-                  >
-                    {focus.replace('-', ' ')}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <SummaryLoading
+          config={currentConfig}
+          documentCount={selectedCount}
+          progress={generationProgress}
+        />
       </DashboardLayout>
     );
   }

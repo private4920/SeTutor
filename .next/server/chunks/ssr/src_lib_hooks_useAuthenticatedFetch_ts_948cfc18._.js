@@ -1,0 +1,3 @@
+module.exports=[9292,a=>{"use strict";var b=a.i(72131),c=a.i(76725);function d(){return{authenticatedFetch:(0,b.useCallback)(async(a,b={})=>{let d=(0,c.getFirebaseAuth)().currentUser;if(!d)throw Error("User is not authenticated");let e=await d.getIdToken(),f=new Headers(b.headers);return f.set("Authorization",`Bearer ${e}`),fetch(a,{...b,headers:f})},[])}}async function e(){let a=(0,c.getFirebaseAuth)().currentUser;return a?a.getIdToken():null}async function f(a){let b=new Headers(a),c=await e();return c&&b.set("Authorization",`Bearer ${c}`),b}a.s(["createAuthHeaders",()=>f,"getIdToken",()=>e,"useAuthenticatedFetch",()=>d])}];
+
+//# sourceMappingURL=src_lib_hooks_useAuthenticatedFetch_ts_948cfc18._.js.map

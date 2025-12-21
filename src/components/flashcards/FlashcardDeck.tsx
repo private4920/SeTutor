@@ -39,11 +39,11 @@ export function FlashcardDeck({
   const [practiceCards, setPracticeCards] = useState<GeneratedFlashcard[]>([]);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const currentCard = viewMode === 'practice' 
-    ? practiceCards[currentIndex] 
+  const currentCard = viewMode === 'practice'
+    ? practiceCards[currentIndex]
     : deck.flashcards[currentIndex];
-  const totalCards = viewMode === 'practice' 
-    ? practiceCards.length 
+  const totalCards = viewMode === 'practice'
+    ? practiceCards.length
     : deck.flashcards.length;
 
   const handlePrevious = useCallback(() => {
@@ -64,7 +64,7 @@ export function FlashcardDeck({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (editingCard || isEditingName) return;
-      
+
       switch (e.key) {
         case 'ArrowLeft':
           handlePrevious();
@@ -106,7 +106,7 @@ export function FlashcardDeck({
 
   const handleSaveEdit = useCallback(() => {
     if (!editingCard) return;
-    
+
     setDeck(prev => ({
       ...prev,
       flashcards: prev.flashcards.map(card =>
@@ -148,7 +148,7 @@ export function FlashcardDeck({
       incorrect: prev.incorrect + (correct ? 0 : 1),
       remaining: prev.remaining - 1,
     }));
-    
+
     if (currentIndex < practiceCards.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setIsFlipped(false);
@@ -166,10 +166,10 @@ export function FlashcardDeck({
   // Export functionality
   const handleExportPDF = useCallback(() => {
     // Create printable content
-    const printContent = deck.flashcards.map((card, i) => 
+    const printContent = deck.flashcards.map((card, i) =>
       `Card ${i + 1}:\nQ: ${card.question}\nA: ${card.answer}\n`
     ).join('\n---\n\n');
-    
+
     const blob = new Blob([`${deck.name}\n\n${printContent}`], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -182,10 +182,10 @@ export function FlashcardDeck({
 
   const handleExportAnki = useCallback(() => {
     // Anki format: question;answer (tab-separated)
-    const ankiContent = deck.flashcards.map(card => 
+    const ankiContent = deck.flashcards.map(card =>
       `${card.question}\t${card.answer}`
     ).join('\n');
-    
+
     const blob = new Blob([ankiContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -220,7 +220,7 @@ export function FlashcardDeck({
   if (viewMode === 'practice' && practiceStats.remaining === 0) {
     const totalAnswered = practiceStats.correct + practiceStats.incorrect;
     const percentage = totalAnswered > 0 ? Math.round((practiceStats.correct / totalAnswered) * 100) : 0;
-    
+
     return (
       <div className="space-y-6">
         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm text-center">
@@ -233,7 +233,7 @@ export function FlashcardDeck({
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Practice Complete!</h2>
           <p className="text-gray-600 mb-6">You&apos;ve reviewed all {totalAnswered} cards</p>
-          
+
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="rounded-lg bg-green-50 p-4">
               <p className="text-3xl font-bold text-green-600">{practiceStats.correct}</p>
@@ -248,7 +248,7 @@ export function FlashcardDeck({
               <p className="text-sm text-blue-700">Score</p>
             </div>
           </div>
-          
+
           <div className="flex justify-center gap-4">
             <button
               onClick={handleStartPractice}
@@ -371,7 +371,7 @@ export function FlashcardDeck({
             </div>
           )}
         </div>
-        
+
         {/* Action buttons - responsive grid on mobile */}
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
           <button
@@ -384,7 +384,7 @@ export function FlashcardDeck({
             </svg>
             Practice
           </button>
-          
+
           {/* Export dropdown */}
           <div className="relative">
             <button
@@ -420,7 +420,7 @@ export function FlashcardDeck({
               </div>
             )}
           </div>
-          
+
           <button
             onClick={handleShare}
             className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-[0.98]"
@@ -431,7 +431,7 @@ export function FlashcardDeck({
             <span className="hidden sm:inline">Share</span>
             <span className="sm:hidden">Share</span>
           </button>
-          
+
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="flex items-center justify-center gap-2 rounded-lg border border-red-300 px-4 py-2.5 sm:py-2 text-sm font-medium text-red-600 hover:bg-red-50 active:scale-[0.98]"
@@ -475,23 +475,22 @@ export function FlashcardDeck({
           <div className="mb-3 sm:mb-4 text-sm text-gray-500">
             Card {currentIndex + 1} of {totalCards}
           </div>
-          
+
           {/* Flip card container */}
-          <div 
+          <div
             className="perspective-1000 w-full max-w-2xl cursor-pointer"
             onClick={handleFlip}
           >
-            <div 
-              className={`relative h-64 sm:h-80 w-full transition-transform duration-500 transform-style-preserve-3d ${
-                isFlipped ? 'rotate-y-180' : ''
-              }`}
+            <div
+              className={`relative h-64 sm:h-80 w-full transition-transform duration-500 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''
+                }`}
               style={{
                 transformStyle: 'preserve-3d',
                 transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
               }}
             >
               {/* Front of card (Question) */}
-              <div 
+              <div
                 className="absolute inset-0 rounded-xl border-2 border-gray-200 bg-white p-4 sm:p-8 shadow-lg backface-hidden"
                 style={{ backfaceVisibility: 'hidden' }}
               >
@@ -512,11 +511,11 @@ export function FlashcardDeck({
                   </div>
                 </div>
               </div>
-              
+
               {/* Back of card (Answer) */}
-              <div 
+              <div
                 className="absolute inset-0 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 p-4 sm:p-8 shadow-lg backface-hidden"
-                style={{ 
+                style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
                 }}
@@ -576,26 +575,24 @@ export function FlashcardDeck({
             <button
               onClick={handlePrevious}
               disabled={currentIndex === 0}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                currentIndex === 0
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${currentIndex === 0
                   ? 'cursor-not-allowed text-gray-300'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
+                }`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Previous
             </button>
-            
+
             <button
               onClick={handleNext}
               disabled={currentIndex === totalCards - 1}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                currentIndex === totalCards - 1
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${currentIndex === totalCards - 1
                   ? 'cursor-not-allowed text-gray-300'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
+                }`}
             >
               Next
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -603,7 +600,7 @@ export function FlashcardDeck({
               </svg>
             </button>
           </div>
-          
+
           {/* Keyboard hint */}
           <p className="mt-4 text-xs text-gray-400 text-center">
             Use ← → arrow keys to navigate, Space or Enter to flip
@@ -620,11 +617,10 @@ export function FlashcardDeck({
               <button
                 key={card.id}
                 onClick={() => handleGoToCard(index)}
-                className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-                  index === currentIndex
+                className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors ${index === currentIndex
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {index + 1}
               </button>

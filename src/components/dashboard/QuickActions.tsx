@@ -1,105 +1,61 @@
 "use client";
 
-import { memo } from 'react';
-import Link from "next/link";
+import { Upload, Brain, FileText, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-interface QuickAction {
-  name: string;
-  description: string;
-  href: string;
-  icon: React.ReactNode;
-  gradient: string;
-}
+export function QuickActions() {
+  const router = useRouter();
 
-const quickActions: QuickAction[] = [
-  {
-    name: "Upload Files",
-    description: "Add new PDFs to your library",
-    href: "/dashboard/files/upload",
-    icon: (
-      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-        />
-      </svg>
-    ),
-    gradient: "from-blue-500 to-blue-600",
-  },
-  {
-    name: "Browse Files",
-    description: "View and organize your files",
-    href: "/dashboard/files",
-    icon: (
-      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-        />
-      </svg>
-    ),
-    gradient: "from-purple-500 to-purple-600",
-  },
-  {
-    name: "Generate Flashcards",
-    description: "Create study cards from documents",
-    href: "/dashboard/flashcards/generate",
-    icon: (
-      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-        />
-      </svg>
-    ),
-    gradient: "from-green-500 to-green-600",
-  },
-];
+  const actions = [
+    {
+      title: "Upload PDF",
+      desc: "Add new materials",
+      icon: Upload,
+      color: "neon", // Primary brand action
+      onClick: () => router.push("/dashboard/files/upload"),
+    },
+    {
+      title: "New Summary",
+      desc: "Summarize text",
+      icon: FileText,
+      color: "blue",
+      onClick: () => router.push("/dashboard/summaries"),
+    },
+    {
+      title: "Create Quiz",
+      desc: "Practice exam",
+      icon: Brain,
+      color: "purple",
+      onClick: () => router.push("/dashboard/quizzes"),
+    },
+  ];
 
-/**
- * Memoized quick actions component
- * Requirements: 1.3, 6.4, 12.1, 12.3 - Responsive design and performance optimization
- * Accessibility: Semantic structure and ARIA labels
- */
-export const QuickActions = memo(function QuickActions() {
   return (
-    <section 
-      className="rounded-lg bg-white p-4 sm:p-6 shadow-sm"
-      aria-labelledby="quick-actions-heading"
-    >
-      <h3 id="quick-actions-heading" className="text-base sm:text-lg font-semibold text-gray-900">Quick Actions</h3>
-      <nav aria-label="Quick actions" className="mt-3 sm:mt-4">
-        <ul role="list" className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
-          {quickActions.map((action) => (
-            <li key={action.name}>
-              <Link
-                href={action.href}
-                className="group flex flex-row sm:flex-col items-center sm:items-center gap-3 sm:gap-0 rounded-lg border border-gray-200 p-3 sm:p-4 text-left sm:text-center transition-all hover:border-transparent hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                aria-label={`${action.name}: ${action.description}`}
-              >
-                <div
-                  className={`flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-r ${action.gradient} text-white transition-transform group-hover:scale-110`}
-                  aria-hidden="true"
-                >
-                  {action.icon}
-                </div>
-                <div className="sm:mt-3">
-                  <span className="text-sm font-medium text-gray-900">
-                    {action.name}
-                  </span>
-                  <p className="mt-0.5 sm:mt-1 text-xs text-gray-600">{action.description}</p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <section>
+      <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {actions.map((action) => (
+          <button
+            key={action.title}
+            onClick={action.onClick}
+            className="group relative flex flex-col items-center justify-center gap-3 p-8 rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-black"
+          >
+            <div className={`
+                            flex size-14 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110
+                            ${action.color === 'neon' ? 'bg-black text-brand-neon' :
+                action.color === 'blue' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' :
+                  'bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white'}
+                        `}>
+              <action.icon className="size-7" strokeWidth={1.5} />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h4 className="font-bold text-gray-900 group-hover:text-black">{action.title}</h4>
+              <p className="text-xs text-gray-500 font-medium">{action.desc}</p>
+            </div>
+          </button>
+        ))}
+      </div>
     </section>
   );
-});
+}

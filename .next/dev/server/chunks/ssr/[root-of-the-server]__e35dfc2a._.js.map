@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/rofid/.gemini/antigravity/scratch/SeTutor/src/app/page.tsx"],"sourcesContent":["import { Navbar } from \"@/components/landing/Navbar\";\r\nimport { Hero } from \"@/components/landing/Hero\";\r\nimport { Features } from \"@/components/landing/Features\";\r\nimport { BentoGrid } from \"@/components/landing/BentoGrid\";\r\nimport { CTA } from \"@/components/landing/CTA\";\r\nimport { Footer } from \"@/components/landing/Footer\";\r\n\r\nexport default function LandingPage() {\r\n  return (\r\n    <div className=\"min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-blue-100 selection:text-blue-900\">\r\n      <Navbar />\r\n      <main>\r\n        <Hero />\r\n        <Features />\r\n        <BentoGrid />\r\n        <CTA />\r\n      </main>\r\n      <Footer />\r\n    </div>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAOe,SAAS;IACtB,qBACE,8OAAC;QAAI,WAAU;;0BACb,8OAAC;;;;;0BACD,8OAAC;;kCACC,8OAAC;;;;;kCACD,8OAAC;;;;;kCACD,8OAAC;;;;;kCACD,8OAAC;;;;;;;;;;;0BAEH,8OAAC;;;;;;;;;;;AAGP"}}]
+}

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from 'react';
+import { NeonButton } from "@/components/ui/NeonButton";
+import { cn } from "@/lib/utils";
+import { Zap, Brain, BookOpen, Layers, HelpCircle, Sliders } from "lucide-react";
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 
@@ -35,96 +38,91 @@ export function FlashcardConfigForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       {/* Quantity Slider */}
-      <div>
-        <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
-          Number of Flashcards
-        </label>
-        <div className="mt-2">
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              id="quantity"
-              min={5}
-              max={50}
-              step={1}
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-              disabled={isGenerating}
-            />
-            <span className="w-12 text-center text-sm font-semibold text-gray-900">
-              {quantity}
-            </span>
-          </div>
-          <div className="mt-1 flex justify-between text-xs text-gray-500">
-            <span>5</span>
-            <span>50</span>
-          </div>
+      <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-6 transition-colors hover:border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <label className="flex items-center gap-2 text-sm font-bold text-gray-900">
+            <Layers className="h-4 w-4 text-brand-neon fill-black" />
+            Number of Flashcards
+          </label>
+          <span className="flex h-8 w-12 items-center justify-center rounded-lg bg-black font-mono font-bold text-brand-neon">
+            {quantity}
+          </span>
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Choose how many flashcards to generate (5-50)
-        </p>
+
+        <input
+          type="range"
+          min={5}
+          max={50}
+          step={1}
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-black focus:outline-none focus:ring-2 focus:ring-brand-neon/50"
+          disabled={isGenerating}
+        />
+        <div className="mt-2 flex justify-between text-xs font-medium text-gray-400">
+          <span>5 cards</span>
+          <span>50 cards</span>
+        </div>
       </div>
 
       {/* Difficulty Level Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="mb-3 block text-sm font-bold text-gray-900">
           Difficulty Level
         </label>
-        <div className="mt-2 flex gap-3">
-          {(['easy', 'medium', 'hard'] as const).map((level) => (
-            <button
-              key={level}
-              type="button"
-              onClick={() => setDifficulty(level)}
-              disabled={isGenerating}
-              className={`flex-1 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all ${
-                difficulty === level
-                  ? level === 'easy'
-                    ? 'border-green-500 bg-green-50 text-green-700'
-                    : level === 'medium'
-                    ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                    : 'border-red-500 bg-red-50 text-red-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-              } ${isGenerating ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <div className="flex flex-col items-center gap-1">
-                {level === 'easy' && (
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { id: 'easy', label: 'Easy', icon: BookOpen, desc: 'Basic recall' },
+            { id: 'medium', label: 'Medium', icon: Brain, desc: 'Balanced' },
+            { id: 'hard', label: 'Hard', icon: Zap, desc: 'Advanced' },
+          ].map((level) => {
+            const isSelected = difficulty === level.id;
+            const Icon = level.icon;
+            return (
+              <div
+                key={level.id}
+                onClick={() => !isGenerating && setDifficulty(level.id as DifficultyLevel)}
+                className={cn(
+                  "relative cursor-pointer overflow-hidden rounded-xl border-2 p-4 transition-all duration-200",
+                  isSelected
+                    ? "border-brand-neon bg-white shadow-neon-glow ring-1 ring-brand-neon"
+                    : "border-gray-100 bg-white text-gray-400 hover:border-gray-200"
                 )}
-                {level === 'medium' && (
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
+              >
+                {isSelected && (
+                  <div className="absolute -right-3 -top-3 h-10 w-10 bg-brand-neon blur-xl opacity-20" />
                 )}
-                {level === 'hard' && (
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-                  </svg>
-                )}
-                <span className="capitalize">{level}</span>
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className={cn(
+                    "rounded-full p-2 transition-colors",
+                    isSelected ? "bg-brand-neon text-black" : "bg-gray-100 text-gray-400"
+                  )}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className={cn("font-bold text-sm", isSelected ? "text-black" : "text-gray-500")}>
+                    {level.label}
+                  </span>
+                </div>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
-        <p className="mt-2 text-xs text-gray-500">
-          {difficulty === 'easy' && 'Basic recall questions focusing on key terms and definitions'}
-          {difficulty === 'medium' && 'Balanced mix of recall and comprehension questions'}
-          {difficulty === 'hard' && 'Advanced questions requiring analysis and application'}
+        <p className="mt-2 text-xs text-gray-500 text-center">
+          {difficulty === 'easy' && 'Focuses on definitions and key terms.'}
+          {difficulty === 'medium' && 'Mixes conceptual understanding and recall.'}
+          {difficulty === 'hard' && 'Challenges deep understanding and application.'}
         </p>
       </div>
 
       {/* Focus Topics Input */}
       <div>
-        <label htmlFor="focusTopics" className="block text-sm font-medium text-gray-700">
-          Focus Topics <span className="text-gray-400">(optional)</span>
+        <label htmlFor="focusTopics" className="mb-2 block text-sm font-bold text-gray-900">
+          Focus Topics <span className="text-gray-400 font-normal">(Optional)</span>
         </label>
-        <div className="mt-2">
+        <div className="relative group">
+          <Sliders className="absolute left-3 top-3 h-5 w-5 text-gray-400 group-focus-within:text-black transition-colors" />
           <input
             type="text"
             id="focusTopics"
@@ -132,46 +130,27 @@ export function FlashcardConfigForm({
             onChange={(e) => setFocusTopics(e.target.value)}
             placeholder="e.g., Chapter 3, Machine Learning, Key Concepts"
             disabled={isGenerating}
-            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-50"
+            className="block w-full rounded-xl border-2 border-gray-100 bg-gray-50 py-2.5 pl-10 pr-4 text-sm font-medium text-gray-900 placeholder-gray-400 focus:border-black focus:bg-white focus:outline-none transition-all"
           />
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Specify topics to focus on, separated by commas
-        </p>
       </div>
 
       {/* Generate Button */}
       <div className="pt-2">
-        <button
+        <NeonButton
           type="submit"
+          fullWidth
           disabled={!canGenerate}
-          className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${
-            canGenerate
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md hover:from-blue-700 hover:to-purple-700 hover:shadow-lg'
-              : 'cursor-not-allowed bg-gray-200 text-gray-400'
-          }`}
+          isLoading={isGenerating}
         >
-          {isGenerating ? (
-            <>
-              <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Generating...</span>
-            </>
-          ) : (
-            <>
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>Generate Flashcards</span>
-            </>
-          )}
-        </button>
+          {isGenerating ? "Generating Flashcards..." : "Generate Flashcards"}
+        </NeonButton>
+
         {selectedDocumentCount === 0 && (
-          <p className="mt-2 text-center text-xs text-amber-600">
-            Please select at least one document to generate flashcards
-          </p>
+          <div className="mt-3 flex items-center justify-center gap-2 text-xs font-medium text-amber-600 bg-amber-50 py-2 rounded-lg">
+            <HelpCircle className="h-4 w-4" />
+            Please select at least one document
+          </div>
         )}
       </div>
     </form>

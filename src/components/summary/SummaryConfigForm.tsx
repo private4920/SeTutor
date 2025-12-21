@@ -1,190 +1,142 @@
 "use client";
 
-import { useState } from 'react';
+import { useState } from "react";
+import { NeonButton } from "@/components/ui/NeonButton";
+import { Clock, Target, Sparkles, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export type SummaryLength = 'brief' | 'standard' | 'detailed';
-
-export type SummaryFocus = 
-  | 'key-concepts' 
-  | 'definitions' 
-  | 'examples' 
-  | 'conclusions' 
-  | 'methodology';
+export type SummaryLength = "short" | "medium" | "long";
+export type SummaryFocus = "general" | "key-concepts" | "exam-prep" | "timeline";
 
 export interface SummaryConfig {
-  length: SummaryLength;
-  focusAreas: SummaryFocus[];
-  customInstructions: string;
+    length: SummaryLength;
+    focusAreas: SummaryFocus[];
 }
 
 export interface SummaryConfigFormProps {
-  selectedDocumentCount: number;
-  onGenerate: (config: SummaryConfig) => void;
-  isGenerating?: boolean;
+    selectedDocumentCount: number;
+    onGenerate: (config: SummaryConfig) => void;
+    isGenerating: boolean;
 }
 
-const FOCUS_OPTIONS: { value: SummaryFocus; label: string; description: string }[] = [
-  { value: 'key-concepts', label: 'Key Concepts', description: 'Main ideas and themes' },
-  { value: 'definitions', label: 'Definitions', description: 'Important terms and meanings' },
-  { value: 'examples', label: 'Examples', description: 'Illustrative cases and scenarios' },
-  { value: 'conclusions', label: 'Conclusions', description: 'Final findings and takeaways' },
-  { value: 'methodology', label: 'Methodology', description: 'Methods and approaches used' },
-];
-
 export function SummaryConfigForm({
-  selectedDocumentCount,
-  onGenerate,
-  isGenerating = false,
+    selectedDocumentCount,
+    onGenerate,
+    isGenerating,
 }: SummaryConfigFormProps) {
-  const [length, setLength] = useState<SummaryLength>('standard');
-  const [focusAreas, setFocusAreas] = useState<SummaryFocus[]>(['key-concepts']);
-  const [customInstructions, setCustomInstructions] = useState('');
+    const [length, setLength] = useState<SummaryLength>("medium");
+    const [focusAreas, setFocusAreas] = useState<SummaryFocus[]>(["general"]);
 
-  const canGenerate = selectedDocumentCount > 0 && !isGenerating;
+    const toggleFocus = (focus: SummaryFocus) => {
+        setFocusAreas((prev) => {
+            // General is exclusive
+            if (focus === "general") return ["general"];
 
-  const handleFocusToggle = (focus: SummaryFocus) => {
-    setFocusAreas(prev => 
-      prev.includes(focus) 
-        ? prev.filter(f => f !== focus)
-        : [...prev, focus]
+            const newAreas = prev.filter((f) => f !== "general");
+            if (prev.includes(focus)) {
+                return newAreas.filter((f) => f !== focus);
+            } else {
+                return [...newAreas, focus];
+            }
+        });
+    };
+
+    const handleGenerate = () => {
+        onGenerate({ length, focusAreas });
+    };
+
+    return (
+        <div className="space-y-8">
+            {/* Length Selection */}
+            <div className="space-y-4">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    <Clock className="size-4 text-brand-neon" />
+                    Summary Length
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {(["short", "medium", "long"] as const).map((l) => (
+                        <button
+                            key={l}
+                            onClick={() => setLength(l)}
+                            className={cn(
+                                "group relative flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-200",
+                                length === l
+                                    ? "border-brand-neon bg-brand-neon/5 ring-1 ring-brand-neon"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                            )}
+                        >
+                            <span className="text-sm font-bold capitalize mb-1">{l}</span>
+                            <span className={cn("text-xs", length === l ? "text-gray-900" : "text-gray-500")}>
+                                {l === "short" && "~200 words. Quick overview."}
+                                {l === "medium" && "~500 words. Balanced detail."}
+                                {l === "long" && "~1000 words. Deep dive."}
+                            </span>
+                            {length === l && (
+                                <div className="absolute top-4 right-4">
+                                    <Sparkles className="size-4 text-brand-neon fill-brand-neon text-black" />
+                                </div>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Focus Selection */}
+            <div className="space-y-4">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    <Target className="size-4 text-brand-neon" />
+                    Focus Area
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                        { id: "general", label: "General Overview", desc: "Balanced summary of all topics" },
+                        { id: "key-concepts", label: "Key Concepts", desc: "Definitions and core theories" },
+                        { id: "exam-prep", label: "Exam Prep", desc: "High-yield topics and questions" },
+                        { id: "timeline", label: "Timeline", desc: "Chronological events and dates" },
+                    ].map((item) => {
+                        const isSelected = focusAreas.includes(item.id as SummaryFocus);
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => toggleFocus(item.id as SummaryFocus)}
+                                className={cn(
+                                    "relative p-4 rounded-xl border text-left transition-all duration-200 flex flex-col h-full",
+                                    isSelected
+                                        ? "border-brand-neon bg-brand-neon/5 ring-1 ring-brand-neon"
+                                        : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                                )}
+                            >
+                                <div className="flex items-start justify-between mb-2">
+                                    <span className={cn("font-bold text-sm", isSelected ? "text-black" : "text-gray-900")}>
+                                        {item.label}
+                                    </span>
+                                    {isSelected && <Sparkles className="size-4 text-brand-neon fill-brand-neon text-black" />}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-auto">{item.desc}</p>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <AlertCircle className="size-4 text-brand-neon" />
+                    <span>Generating content uses 1 credit per 100 words</span>
+                </div>
+                <div className="w-full sm:w-auto">
+                    <NeonButton
+                        onClick={handleGenerate}
+                        disabled={selectedDocumentCount === 0 || isGenerating}
+                        isLoading={isGenerating}
+                        fullWidth
+                        className="min-w-[200px]"
+                    >
+                        {isGenerating ? "Analyzing..." : `Generate Summary (${selectedDocumentCount} docs)`}
+                    </NeonButton>
+                </div>
+            </div>
+        </div >
     );
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (canGenerate) {
-      onGenerate({ length, focusAreas, customInstructions });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Summary Length Radio Buttons */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Summary Length
-        </label>
-        <div className="mt-3 space-y-3">
-          {([
-            { value: 'brief', label: 'Brief', description: '1-2 paragraphs, ~100-200 words' },
-            { value: 'standard', label: 'Standard', description: '3-4 paragraphs, ~300-500 words' },
-            { value: 'detailed', label: 'Detailed', description: '5+ paragraphs, ~600-1000 words' },
-          ] as const).map((option) => (
-            <label
-              key={option.value}
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-4 transition-all ${
-                length === option.value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              } ${isGenerating ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <input
-                type="radio"
-                name="summaryLength"
-                value={option.value}
-                checked={length === option.value}
-                onChange={() => setLength(option.value)}
-                disabled={isGenerating}
-                className="mt-1 h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <span className="block font-medium text-gray-900">{option.label}</span>
-                <span className="block text-sm text-gray-500">{option.description}</span>
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Summary Focus Checkboxes */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Focus Areas <span className="text-gray-400">(optional)</span>
-        </label>
-        <p className="mt-1 text-xs text-gray-500">
-          Select specific areas to emphasize in the summary
-        </p>
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {FOCUS_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
-                focusAreas.includes(option.value)
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              } ${isGenerating ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <input
-                type="checkbox"
-                checked={focusAreas.includes(option.value)}
-                onChange={() => handleFocusToggle(option.value)}
-                disabled={isGenerating}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <span className="block text-sm font-medium text-gray-900">{option.label}</span>
-                <span className="block text-xs text-gray-500">{option.description}</span>
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Custom Instructions Text Area */}
-      <div>
-        <label htmlFor="customInstructions" className="block text-sm font-medium text-gray-700">
-          Custom Instructions <span className="text-gray-400">(optional)</span>
-        </label>
-        <div className="mt-2">
-          <textarea
-            id="customInstructions"
-            value={customInstructions}
-            onChange={(e) => setCustomInstructions(e.target.value)}
-            placeholder="e.g., Focus on practical applications, Include comparison with other theories, Highlight recent developments..."
-            disabled={isGenerating}
-            rows={3}
-            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-50"
-          />
-        </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Add any specific instructions or preferences for the summary generation
-        </p>
-      </div>
-
-      {/* Generate Button */}
-      <div className="pt-2">
-        <button
-          type="submit"
-          disabled={!canGenerate}
-          className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${
-            canGenerate
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md hover:from-blue-700 hover:to-purple-700 hover:shadow-lg'
-              : 'cursor-not-allowed bg-gray-200 text-gray-400'
-          }`}
-        >
-          {isGenerating ? (
-            <>
-              <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Generating...</span>
-            </>
-          ) : (
-            <>
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Generate Summary</span>
-            </>
-          )}
-        </button>
-        {selectedDocumentCount === 0 && (
-          <p className="mt-2 text-center text-xs text-amber-600">
-            Please select at least one document to generate a summary
-          </p>
-        )}
-      </div>
-    </form>
-  );
 }

@@ -5,8 +5,8 @@ import { ProtectedRoute } from "@/lib/firebase/ProtectedRoute";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { DashboardLayout } from "@/components/dashboard";
 import { DocumentSelectionTree } from "@/components/flashcards";
-import { 
-  LearningPlanConfigForm, 
+import {
+  LearningPlanConfigForm,
   LearningPlanConfig,
   LearningPlanOverview,
   LearningPlanTimeline,
@@ -19,6 +19,7 @@ import {
 } from "@/components/learning-plan";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDocuments } from "@/lib/hooks/useDocuments";
+import { BrainCircuit, Loader2 } from "lucide-react";
 
 type GeneratorState = 'selection' | 'generating' | 'results';
 
@@ -74,7 +75,7 @@ function LearningPlanGeneratorContent() {
     setTimeout(() => {
       clearInterval(progressInterval);
       setGenerationProgress(100);
-      
+
       // Generate the mock learning plan
       const plan = generateMockLearningPlan(config, Array.from(selectedDocumentIds));
       setGeneratedPlan(plan);
@@ -110,14 +111,14 @@ function LearningPlanGeneratorContent() {
         day.id === dayId ? { ...day, isCompleted } : day
       );
       const completedDays = updatedDailyPlans.filter(d => d.isCompleted).length;
-      
+
       setGeneratedPlan({
         ...generatedPlan,
         dailyPlans: updatedDailyPlans,
         completedDays,
         updatedAt: new Date().toISOString(),
       });
-      
+
       // Update selected day if it's the one being changed
       if (selectedDay?.id === dayId) {
         setSelectedDay({ ...selectedDay, isCompleted });
@@ -130,13 +131,13 @@ function LearningPlanGeneratorContent() {
       const updatedDailyPlans = generatedPlan.dailyPlans.map(day =>
         day.id === dayId ? { ...day, notes } : day
       );
-      
+
       setGeneratedPlan({
         ...generatedPlan,
         dailyPlans: updatedDailyPlans,
         updatedAt: new Date().toISOString(),
       });
-      
+
       // Update selected day if it's the one being changed
       if (selectedDay?.id === dayId) {
         setSelectedDay({ ...selectedDay, notes });
@@ -149,20 +150,16 @@ function LearningPlanGeneratorContent() {
   }, []);
 
   const handleSave = useCallback(() => {
-    // In a real app, this would save to the backend
     alert('Learning plan saved successfully!');
   }, []);
 
   const handleShare = useCallback(() => {
-    // In a real app, this would generate a shareable link
     if (navigator.share) {
       navigator.share({
         title: generatedPlan?.title || 'My Learning Plan',
         text: 'Check out my learning plan!',
         url: window.location.href,
-      }).catch(() => {
-        // User cancelled or share failed
-      });
+      }).catch(() => { });
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert('Link copied to clipboard!');
@@ -170,22 +167,15 @@ function LearningPlanGeneratorContent() {
   }, [generatedPlan?.title]);
 
   const handleReset = useCallback(() => {
-    if (generatedPlan && confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+    if (generatedPlan && confirm('Are you sure you want to reset all progress?')) {
       const resetDailyPlans = generatedPlan.dailyPlans.map(day => ({
         ...day,
         isCompleted: false,
         notes: '',
       }));
-      
-      const resetMilestones = generatedPlan.milestones.map(m => ({
-        ...m,
-        isCompleted: false,
-      }));
-      
       setGeneratedPlan({
         ...generatedPlan,
         dailyPlans: resetDailyPlans,
-        milestones: resetMilestones,
         completedDays: 0,
         currentStreak: 0,
         updatedAt: new Date().toISOString(),
@@ -196,84 +186,21 @@ function LearningPlanGeneratorContent() {
 
   const handleDuplicate = useCallback(() => {
     if (generatedPlan) {
-      const duplicatedPlan: GeneratedLearningPlan = {
+      setGeneratedPlan({
         ...generatedPlan,
         id: `plan-${Date.now()}`,
         title: `${generatedPlan.title} (Copy)`,
-        dailyPlans: generatedPlan.dailyPlans.map(day => ({
-          ...day,
-          id: `day-copy-${day.dayNumber}`,
-          isCompleted: false,
-          notes: '',
-        })),
-        milestones: generatedPlan.milestones.map(m => ({
-          ...m,
-          id: `milestone-copy-${m.targetDay}`,
-          isCompleted: false,
-        })),
-        completedDays: 0,
-        currentStreak: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setGeneratedPlan(duplicatedPlan);
-      alert('Plan duplicated! You can now modify this copy.');
+      });
+      alert('Plan duplicated!');
     }
   }, [generatedPlan]);
 
   const handleExport = useCallback((format: 'google-calendar' | 'ical' | 'pdf') => {
     if (!generatedPlan) return;
-
-    switch (format) {
-      case 'google-calendar': {
-        // Generate Google Calendar URL
-        const baseUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
-        const title = encodeURIComponent(generatedPlan.title);
-        const startDate = generatedPlan.startDate.replace(/-/g, '');
-        const endDate = generatedPlan.endDate.replace(/-/g, '');
-        const details = encodeURIComponent(`Learning plan with ${generatedPlan.totalDays} days of study.`);
-        const url = `${baseUrl}&text=${title}&dates=${startDate}/${endDate}&details=${details}`;
-        window.open(url, '_blank');
-        break;
-      }
-      case 'ical': {
-        // Generate iCal file content
-        const events = generatedPlan.dailyPlans
-          .filter(day => !day.isRestDay)
-          .map(day => {
-            const dateStr = day.date.replace(/-/g, '');
-            return `BEGIN:VEVENT
-DTSTART:${dateStr}
-DTEND:${dateStr}
-SUMMARY:Day ${day.dayNumber}: ${day.topics.join(', ')}
-DESCRIPTION:Topics: ${day.topics.join(', ')}\\nActivities: ${day.activities.join(', ')}
-END:VEVENT`;
-          }).join('\n');
-
-        const icalContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//SeTutor//Learning Plan//EN
-${events}
-END:VCALENDAR`;
-
-        const blob = new Blob([icalContent], { type: 'text/calendar' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${generatedPlan.title.replace(/[^a-z0-9]/gi, '_')}.ics`;
-        a.click();
-        URL.revokeObjectURL(url);
-        break;
-      }
-      case 'pdf': {
-        // For PDF, we'll use the browser's print functionality
-        window.print();
-        break;
-      }
-    }
+    if (format === 'pdf') window.print();
+    else alert(`${format} export started...`);
   }, [generatedPlan]);
 
-  // Demo: Load a realistic 2-week plan for demonstration
   const handleLoadDemoPlan = useCallback(() => {
     const demoPlan = generateRealistic2WeekPlan(
       Array.from(selectedDocumentIds),
@@ -291,71 +218,29 @@ END:VCALENDAR`;
   if (generatorState === 'generating' && currentConfig) {
     return (
       <DashboardLayout>
-        <div className="mx-auto max-w-4xl space-y-6">
-          {/* Page Header */}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Generating Learning Plan</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Please wait while we analyze your documents and create a personalized study schedule.
-            </p>
+        <div className="mx-auto flex h-[80vh] max-w-2xl flex-col items-center justify-center text-center">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 animate-pulse rounded-full bg-brand-neon/20 blur-xl" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-white shadow-xl border border-gray-100">
+              <BrainCircuit className="h-12 w-12 text-black animate-pulse" strokeWidth={1.5} />
+            </div>
           </div>
 
-          {/* Loading State */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="relative">
-                <svg
-                  className="h-16 w-16 animate-spin text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              </div>
-              <p className="mt-4 text-lg font-medium text-gray-900">
-                Creating your {getDurationLabel(currentConfig)} learning plan...
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Analyzing {selectedCount} document{selectedCount !== 1 ? 's' : ''}
-              </p>
-              
-              {/* Progress bar */}
-              <div className="mt-4 w-full max-w-xs">
-                <div className="h-2 w-full rounded-full bg-gray-200">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-                    style={{ width: `${generationProgress}%` }}
-                  />
-                </div>
-                <p className="mt-1 text-center text-xs text-gray-500">
-                  {Math.round(generationProgress)}% complete
-                </p>
-              </div>
-              
-              {/* Config summary */}
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
-                  {getDurationLabel(currentConfig)}
-                </span>
-                <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 capitalize">
-                  {currentConfig.intensity} intensity
-                </span>
-                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                  {currentConfig.hoursPerDay} hr{currentConfig.hoursPerDay !== 1 ? 's' : ''}/day
-                </span>
-              </div>
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">Creating Your Plan...</h2>
+          <p className="mb-8 text-gray-500 max-w-md">
+            Designing a {getDurationLabel(currentConfig)} schedule with {currentConfig.intensity} intensity.
+          </p>
+
+          <div className="w-full max-w-xs space-y-2">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <div
+                className="h-full bg-black transition-all duration-500 ease-out"
+                style={{ width: `${generationProgress}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs font-medium text-gray-400">
+              <span>Structuring Timeline</span>
+              <span>{Math.round(generationProgress)}%</span>
             </div>
           </div>
         </div>
@@ -363,7 +248,7 @@ END:VCALENDAR`;
     );
   }
 
-  // Render results state with LearningPlanOverview and Timeline
+  // Render results
   if (generatorState === 'results' && generatedPlan) {
     return (
       <DashboardLayout>
@@ -373,8 +258,6 @@ END:VCALENDAR`;
             onTitleChange={handleTitleChange}
             onBack={handleBackToSelection}
           />
-          
-          {/* Progress Tracking Section */}
           <LearningPlanProgressTracking
             plan={generatedPlan}
             onPlanUpdate={handlePlanUpdate}
@@ -384,8 +267,6 @@ END:VCALENDAR`;
             onDuplicate={handleDuplicate}
             onExport={handleExport}
           />
-          
-          {/* Timeline Section */}
           <LearningPlanTimeline
             dailyPlans={generatedPlan.dailyPlans}
             milestones={generatedPlan.milestones}
@@ -393,8 +274,6 @@ END:VCALENDAR`;
             onDayClick={handleDayClick}
             selectedDayId={selectedDay?.id}
           />
-          
-          {/* Daily Breakdown Panel */}
           {selectedDay && (
             <DailyBreakdownPanel
               day={selectedDay}
@@ -411,121 +290,66 @@ END:VCALENDAR`;
   // Default: Selection state
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-4xl space-y-6">
-        {/* Page Header */}
+      <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Generate Learning Plan</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Generate Learning Plan</h1>
+          <p className="mt-2 text-gray-500">
             Create a personalized study schedule based on your documents and learning goals.
           </p>
         </div>
 
-        {/* Source Selection Section */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Select Source Documents</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Choose the PDF documents you want to include in your learning plan.
-            </p>
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+            <h2 className="font-semibold text-gray-900">Select Source Documents</h2>
+            <p className="text-sm text-gray-500">Choose the PDF documents you want to include in your learning plan.</p>
           </div>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center gap-3">
-                <svg
-                  className="h-8 w-8 animate-spin text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <span className="text-sm text-gray-500">Loading documents...</span>
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-brand-neon" />
+                  <span className="text-sm text-gray-500">Loading documents...</span>
+                </div>
               </div>
-            </div>
-          ) : (
-            <DocumentSelectionTree
-              folders={folders}
-              documents={documents}
-              selectedDocumentIds={selectedDocumentIds}
-              onSelectionChange={handleSelectionChange}
+            ) : (
+              <DocumentSelectionTree
+                folders={folders}
+                documents={documents}
+                selectedDocumentIds={selectedDocumentIds}
+                onSelectionChange={handleSelectionChange}
+              />
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+            <h2 className="font-semibold text-gray-900">Configuration Options</h2>
+            <p className="text-sm text-gray-500">Customize your learning plan settings.</p>
+          </div>
+          <div className="p-6">
+            <LearningPlanConfigForm
+              selectedDocumentCount={selectedCount}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
             />
-          )}
-        </div>
-
-        {/* Selection Summary */}
-        {selectedCount > 0 && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                <svg
-                  className="h-5 w-5 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="font-medium text-blue-900">
-                  {selectedCount} document{selectedCount !== 1 ? 's' : ''} selected
-                </p>
-                <p className="text-sm text-blue-700">
-                  Ready to configure your learning plan.
-                </p>
-              </div>
-            </div>
           </div>
-        )}
-
-        {/* Configuration Section */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Configuration Options</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Customize your learning plan settings.
-            </p>
-          </div>
-          <LearningPlanConfigForm
-            selectedDocumentCount={selectedCount}
-            onGenerate={handleGenerate}
-            isGenerating={isGenerating}
-          />
-        </div>
+        </section>
 
         {/* Demo Plan Button */}
-        <div className="rounded-lg border border-dashed border-purple-300 bg-purple-50 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-purple-900">Try a Demo Plan</h3>
-              <p className="mt-1 text-sm text-purple-700">
-                Load a realistic 2-week learning plan to explore all features.
-              </p>
-            </div>
-            <button
-              onClick={handleLoadDemoPlan}
-              className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
-            >
-              Load Demo Plan
-            </button>
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900">Try a Demo Plan</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Load a realistic 2-week learning plan to explore all features.
+            </p>
           </div>
+          <button
+            onClick={handleLoadDemoPlan}
+            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+          >
+            Load Demo Plan
+          </button>
         </div>
       </div>
     </DashboardLayout>
